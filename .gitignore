@@ -1,0 +1,8 @@
+
+__pycache__/
+
+vk_config\.v2\.json
+
+*.log
+
+\.vscode/

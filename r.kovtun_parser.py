@@ -9,10 +9,13 @@ setup_logging.setup_logging()
 
 KOVTUN_ID = 138383535
 
+
 def auth(login, password):
-    session = vk_api.VkApi(login, password, scope=8200)
+    session = vk_api.VkApi(login, password)
+    #session = vk_api.VkApi(login, password, scope='notes,audio,wall,nohttps')
     session.auth()
     return session
+
 
 def main(args):
     logger = logging.getLogger('main')
@@ -25,8 +28,8 @@ def main(args):
     logger.info('vk version: %s', session.api_version)
 
     track_processor = tracks_processor.TracksProcessor(session, args.output)
-    track_processor.populate()
-    post_processor = posts_processor.ProstsProcessor()
+    #track_processor.populate()
+    post_processor = posts_processor.PostsProcessor()
 
     posts = tools.get_all_iter('wall.get', 1, {'owner_id': KOVTUN_ID, 'filter': 'owner'})
     for post in posts:
@@ -37,10 +40,11 @@ def main(args):
         audio_attachment = post_info['audio_attachment']
         track_id = track_processor.find(audio_attachment['artist'], audio_attachment['title'])
         if not track_id:
-            track_id = track_processor.add(audio_attachment['owner_id'], audio_attachment['id'])
+            # track_id = track_processor.add(audio_attachment['owner_id'], audio_attachment['id'])
             logger.info('added track %d %s %s', track_id, audio_attachment['artist'], audio_attachment['title'])
         track_processor.set_track_data(track_id, audio_attachment['tracks_info'])
         track_processor.process(track_id)
+
 
 if __name__ == '__main__':
     cli = argparse.ArgumentParser()

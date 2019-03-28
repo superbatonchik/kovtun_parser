@@ -1,6 +1,12 @@
 import re
 
-class ProstsProcessor:
+
+def get_secs(hh_ss, delim):
+    time_hh_ss = [int(x) for x in hh_ss.split(delim)]
+    return time_hh_ss[0] * 60 + time_hh_ss[1]
+
+
+class PostsProcessor:
 
     def __init__(self):
         self._empty_post = {'empty': True}
@@ -27,18 +33,14 @@ class ProstsProcessor:
             tracks_info_str = all_tracks_info_str[i]
             matches = self._re_track.search(tracks_info_str)
             track_info = {
-                'start': self.__get_secs(matches.group('start'), ':'),
+                'start': get_secs(matches.group('start'), ':'),
                 'end': -1,
                 'artist': matches.group('artist'),
                 'title': matches.group('title')
             }
             if i < len(all_tracks_info_str) - 1:
-                tracks_info_str_n = all_tracks_info_str[i+1]
+                tracks_info_str_n = all_tracks_info_str[i + 1]
                 matches_n = self._re_track.search(tracks_info_str_n)
-                track_info['end'] = self.__get_secs(matches_n.group('start'), ':')
+                track_info['end'] = get_secs(matches_n.group('start'), ':')
             post['audio_attachment']['tracks_info'].append(track_info)
         return post
-
-    def __get_secs(self, hh_ss, delim):
-        time_hh_ss = [int(x) for x in hh_ss.split(delim)]
-        return time_hh_ss[0] * 60 + time_hh_ss[1]

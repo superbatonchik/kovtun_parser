@@ -3,7 +3,10 @@ import os
 import requests
 import yaml
 from vk_api.audio import VkAudio
-from tqdm import tqdm
+import get
+
+
+DOWNLOAD_THREADS = 4
 
 class TracksProcessor:
     #__slots__ = ('_api', '_session', '_vkAudio')
@@ -54,13 +57,13 @@ class TracksProcessor:
         new_id = self._api.audio.add(audio_id=audio_id, owner_id=owner_id)
         self._last_added_tracks.append(new_id)
         self.populate()
-    
+
     def set_track_data(self, track_id, track_data):
         track = self.find_track(track_id)
         track['track_data'] = track_data
         last = track['track_data'][-1]
         last['end'] = track['dur'] - last['start']
-    
+
     def process(self, track_id):
         if track_id not in self._history:
             self._history[track_id] = {
@@ -69,11 +72,7 @@ class TracksProcessor:
             }
         hst = self._history[track_id]
         track = self.find_track(track_id)
-        if hst['download_status'] == 'new':
-            response = requests.get(track['url'], stream=True)
-            total_size = int(response.headers.get('content-length', 0)); 
-            with open(os.path.join(self._output_dir, track['filename']), 'wb') as f:
-                for data in tqdm(response.iter_content(), total=total_size,unit='B', unit_scale=True):
-                    f.write(data)
+        if hst['download_status'] == 'new' \
+                and get.download(track['url'], os.path.join(self._output_dir, track['filename']), DOWNLOAD_THREADS):
             hst['download_status'] = 'downloaded'
         self.save_history(self._output_dir)
